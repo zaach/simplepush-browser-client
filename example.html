@@ -1,0 +1,47 @@
+
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type="text/javascript" src="lib/uuid.js"></script>
+<script type="text/javascript" src="lib/eventemitter2.js"></script>
+<script type="text/javascript" src="lib/web_socket.js"></script>
+<script type="text/javascript" src="client.js"></script>
+
+<script type="text/javascript">
+  var userAppServerUrl = 'http://localhost:8181/user/42';
+
+  // Create a new UserAgent client
+  var client = new SimplePushClient({ pushServer: 'ws://localhost:8180' });
+
+  client.init(function() {
+
+    // register for a new channel
+    client.register(function(err, reply, channel) {
+      if (err) {
+        console.log('error', reply);
+        return;
+      }
+      console.log('success', reply);
+
+      // handle push notifications
+      channel.on('push', function(update) {
+        console.log('received push notification!', update);
+      });
+
+      // send endpoint to appserver
+      $.post(userAppServerUrl + '/endpoint', { endpoint: reply.pushEndpoint })
+      .done(function(data) {
+        console.log('sent endpoint to appserver');
+      });
+    });
+  });
+
+
+// Update user data on AppServer to trigger a push notification
+function sendUpdate() {
+  $.post(userAppServerUrl + '/update', { foo: 'bar' })
+  .done(function(data) {
+    console.log('done with update', data);
+  });
+}
+
+
+</script>
